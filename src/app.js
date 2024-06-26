@@ -1,8 +1,19 @@
 let stream = null;
 let recorder;
+let wakeLock;
 let audioChunks = [];
 
 function start() {
+  navigator.wakeLock
+    .request("screen")
+    .then((wake) => {
+      wakeLock = wake;
+      console.log("Screen wake lock is active");
+    })
+    .catch((err) => {
+      console.error(`Error: ${err}`);
+    });
+
   navigator.mediaDevices
     .getUserMedia({ audio: true })
     .then((stream) => {
@@ -24,6 +35,10 @@ function start() {
 }
 
 function stop() {
+  wakeLock.release().then(() => {
+    console.log("Screen wake lock is released");
+  });
+
   const video = document.querySelector("video");
   video.srcObject.getTracks().forEach((track) => track.stop());
   video.srcObject = null;
